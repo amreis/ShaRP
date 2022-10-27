@@ -1,0 +1,26 @@
+dataset_name,test_name,exp,T_train,C_train,R_train,S_train,N_train,DSC_train,CC_train,MSE_train
+mnist,ShaRP-GT,$\bigcirc$,0.735,0.899,0.224,0.859,0.986,0.964,0.333,0.054
+mnist,ShaRP-GT,$\square (\omega=5)$,0.735,0.896,0.121,0.874,0.982,0.967,0.103,0.054
+mnist,ShaRP-GT,$\square (\omega=15)$,0.744,0.907,0.259,0.867,0.937,0.913,0.472,0.053
+mnist,ShaRP-GT,$\triangle$,0.740,0.877,0.170,0.753,0.984,0.920,0.309,0.054
+mnist,ShaRP-GT,$\triangle^\dagger$,0.722,0.810,0.062,0.692,0.935,0.780,0.266,0.055
+fashionmnist,ShaRP-GT,$\bigcirc$,0.825,0.920,0.480,0.883,0.853,0.815,0.575,0.05
+fashionmnist,ShaRP-GT,$\square (\omega=5)$,0.824,0.898,0.531,0.894,0.828,0.778,0.521,0.049
+fashionmnist,ShaRP-GT,$\square (\omega=15)$,0.848,0.915,0.570,0.884,0.805,0.744,0.763,0.045
+fashionmnist,ShaRP-GT,$\triangle$,0.809,0.884,0.356,0.797,0.849,0.780,0.412,0.051
+fashionmnist,ShaRP-GT,$\triangle^\dagger$,0.810,0.822,0.405,0.727,0.817,0.688,0.533,0.052
+har,ShaRP-GT,$\bigcirc$,0.823,0.771,0.560,0.726,0.918,0.883,0.714,0.01
+har,ShaRP-GT,$\square (\omega=5)$,0.826,0.888,0.559,0.776,0.978,0.958,0.285,0.009
+har,ShaRP-GT,$\square (\omega=15)$,0.827,0.859,0.602,0.777,0.963,0.917,0.742,0.009
+har,ShaRP-GT,$\triangle$,0.827,0.856,0.565,0.594,0.970,0.937,0.114,0.009
+har,ShaRP-GT,$\triangle^\dagger$,0.826,0.830,0.444,0.579,0.966,0.929,0.285,0.009
+reuters,ShaRP-GT,$\bigcirc$,0.552,0.675,0.215,0.659,0.958,0.878,0.542,0.001
+reuters,ShaRP-GT,$\square (\omega=5)$,0.553,0.682,0.306,0.719,0.973,0.943,0.285,0.001
+reuters,ShaRP-GT,$\square (\omega=15)$,0.554,0.701,0.326,0.710,0.974,0.849,0.20,0.001
+reuters,ShaRP-GT,$\triangle$,0.557,0.702,0.295,0.546,0.975,0.932,0.542,0.001
+reuters,ShaRP-GT,$\triangle^\dagger$,0.558,0.696,0.367,0.521,0.964,0.911,0.942,0.001
+usps,ShaRP-GT,$\bigcirc$,0.804,0.922,0.346,0.774,0.972,0.944,0.533,0.042
+usps,ShaRP-GT,$\square (\omega=5)$,0.801,0.914,0.318,0.779,0.978,0.936,0.454,0.043
+usps,ShaRP-GT,$\square (\omega=15)$,0.810,0.927,0.355,0.790,0.953,0.934,0.296,0.043
+usps,ShaRP-GT,$\triangle$,0.814,0.904,0.286,0.630,0.973,0.903,0.363,0.043
+usps,ShaRP-GT,$\triangle^\dagger$,0.796,0.830,0.071,0.529,0.948,0.801,0.375,0.044

@@ -1,0 +1,1 @@
+{"verbose": false, "random_seed": 420, "epochs": 10, "batch_size": 256, "train_size": 70000, "timeout": 300.0}
