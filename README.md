@@ -20,3 +20,8 @@ python experiment2_inverse.py
 python experiment3_clustering.py
 (...)
 ```
+
+
+----
+
+This algorithm takes heavy inspiration from [SSNP](https://research.rug.nl/en/publications/self-supervised-dimensionality-reduction-with-neural-networks-and), and some of the code here is copied and adapted from [its repository](https://github.com/mespadoto/ssnp).
