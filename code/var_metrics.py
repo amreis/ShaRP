@@ -10,8 +10,6 @@ def direct_proj_gradient(model, input_images) -> tf.Tensor:
     with tf.GradientTape() as t:
         t.watch(input_images)
         output = model(input_images)
-    # gradients = t.gradient(output, input_images)
-    # tf.print(gradients.shape)
     jacobians = t.batch_jacobian(output, input_images)
     gradients = tf.linalg.norm(jacobians, axis=1)
     return tf.reduce_mean(gradients, axis=0)
@@ -34,24 +32,6 @@ def finite_differences(model, sample_points: tf.Tensor, eps: float) -> tf.Tensor
         sample_points = tf.convert_to_tensor(sample_points)
     n_sample_points = sample_points.shape[0]
     dim_points = sample_points.shape[1]
-    # new_sample_points = tf.vectorized_map(
-    #     lambda row: tf.stack(
-    #         [
-    #             row + np.array([0, eps]),
-    #             row + np.array([0, -eps]),
-    #             row + np.array([eps, 0]),
-    #             row + np.array([-eps, 0]),
-    #         ]
-    #     ),
-    #     sample_points,
-    # )  # shape = (#sample_points, 4, point_dims = 2)
-    # new_sample_points = tf.reshape(
-    #     tf.transpose(
-    #         sample_points + eps * np.array([[[[0, 1]], [[0, -1]]], [[[1, 0]], [[-1, 0]]]]),
-    #         perm=[2, 1, 0, 3],
-    #     ),
-    #     (n_sample_points, -1, dim_points),
-    # )
     new_sample_points = tf.reshape(
         tf.transpose(
             sample_points + eps * np.array([[[[0, -1]], [[-1, 0]]], [[[0, 1]], [[1, 0]]]]),
@@ -68,5 +48,4 @@ def finite_differences(model, sample_points: tf.Tensor, eps: float) -> tf.Tensor
     )
     diffs = tf.squeeze(tf.experimental.numpy.diff(output_for_new_points, axis=-2))
 
-    # diffs = output_for_new_points - output[:, tf.newaxis, :]
     return tf.linalg.norm(diffs, axis=-1) / 2 * eps

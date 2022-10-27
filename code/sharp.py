@@ -369,10 +369,6 @@ class ProjectDataCallback(callbacks.Callback):
 
 
 if __name__ == "__main__":
-    # tf.random.set_seed(42)
-    # utils.set_random_seed(42)
-    # tf.config.experimental.enable_op_determinism()
-
     if "code" not in os.getcwd():
         os.chdir("./code")
 
@@ -380,14 +376,7 @@ if __name__ == "__main__":
     y = np.load("../data/mnist/y.npy")
 
     original_dim = X.shape[1]
-    pentagon_points = [np.array([0.0, 0.5])]
-    rot_matrix = np.eye(2) * np.cos(np.radians(360.0 / 5)) + np.array(
-        [[0.0, -1.0], [1.0, 0.0]]
-    ) * np.sin(np.radians(360.0 / 5))
-    for i in range(1, 5):
-        prev_point = pentagon_points[i - 1]
-        pentagon_points.append(rot_matrix @ prev_point)
-    ssnp = ShaRP(
+    sharp = ShaRP(
         original_dim,
         len(np.unique(y)),
         "diagonal_normal",
@@ -412,7 +401,7 @@ if __name__ == "__main__":
 
     epochs = 20
 
-    ssnp.fit(
+    sharp.fit(
         train_dataset,
         validation_data=val_dataset,
         epochs=epochs,
@@ -426,19 +415,10 @@ if __name__ == "__main__":
                 mode="min",
             ),
             callbacks.TerminateOnNaN(),
-            # callbacks.TensorBoard(
-            #     log_dir="/tmp/logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-            # ),
-            # ProjectDataCallback(X_train, y_train, "./progress/SSNPVAE_Triangle_WithBias"),
         ],
     )
 
-    ###########################################################################
-    # from code import interact
-    # interact(local=locals())
-    ###########################################################################
-
-    X_i = ssnp.transform(X_train)
+    X_i = sharp.transform(X_train)
     x_coords, y_coords = (
         np.linspace(X_i[:, 0].min(), X_i[:, 0].max(), 250),
         np.linspace(X_i[:, 1].min(), X_i[:, 1].max(), 250),
@@ -448,9 +428,9 @@ if __name__ == "__main__":
     import var_metrics
 
     sample_points = np.c_[xx.ravel(), yy.ravel()]
-    gradients = var_metrics.gradient_norm(ssnp, sample_points).numpy()
-    diffs = var_metrics.finite_differences(ssnp, sample_points, eps=1e-2).numpy().sum(axis=1)
-    variances = np.exp(ssnp.log_var_embedding(ssnp.inverse_transform(sample_points)) * 0.5).sum(
+    gradients = var_metrics.gradient_norm(sharp, sample_points).numpy()
+    diffs = var_metrics.finite_differences(sharp, sample_points, eps=1e-2).numpy().sum(axis=1)
+    variances = np.exp(sharp.log_var_embedding(sharp.inverse_transform(sample_points)) * 0.5).sum(
         axis=1
     )
 
@@ -486,56 +466,3 @@ if __name__ == "__main__":
 
     del xx, yy, x_coords, y_coords, sample_points
     plt.show()
-    # plt.savefig("tmp.png")
-
-    # import tempfile
-
-    # MODEL_DIR = tempfile.gettempdir()
-    # version = 1
-    # export_path = os.path.join(
-    #     MODEL_DIR, "models", f"ssnp_vae_{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    # )
-    # print(f"export path = {export_path}")
-
-    # from tensorflow.keras.models import save_model, load_model
-
-    # ssnp.mu_model.save(
-    #     export_path,
-    #     overwrite=True,
-    #     save_format="tf",
-    #     options=None,
-    #     save_traces=False,
-    # )
-    # print("Saved model:")
-    # os.system(f"ls -l {os.path.dirname(export_path)}")
-
-    # ssnp2 = V_SSNP(
-    #     original_dim,
-    #     len(np.unique(y)),
-    #     "diagonal_normal",
-    #     variational_layer_kwargs=dict(kl_weight=0.1),
-    #     var_leaky_relu_alpha=-0.0001,
-    #     bottleneck_activation="linear",
-    #     bottleneck_l1=0.0,
-    #     bottleneck_l2=0.5,
-    # )
-    # ssnp2.load_weights(export_path)
-    # ssnp2 = load_model(export_path)
-
-    # assert np.allclose(ssnp.mu_embedding(X_train), ssnp2.mu_embedding(X_train))
-    # ssnp2.mu_model.load_weights(os.path.join(export_path))
-    # print(plot_clusters_and_var(vae, X_train, y_train))
-    # print(plot_clusters_and_var(vae, X_test[:5000], y_test[:5000]))
-    # tuner = kt.BayesianOptimization(
-    #     lambda hp: model_builder(original_dim, 10, hp),
-    #     objective=[kt.Objective("val_output_1_accuracy", "max"), kt.Objective("val_output_2_accuracy", "max")],
-    #     max_trials=30,
-    #     directory="../tuner",
-    #     project_name="ssnp_vae_bay1",
-    # )
-    # stop_early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=5)
-    # tuner.search(
-    #     train_dataset, epochs=15, validation_data=val_dataset, callbacks=[stop_early]
-    # )
-    # best_hps = tuner.get_best_hyperparameters(1)[0]
-    # print(best_hps.values)
