@@ -5,14 +5,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pylab
 import tensorflow as tf
+from sampling_layers import get_layer_builder
 from sklearn.preprocessing import LabelBinarizer
 from tensorflow import keras as tfk
 from tensorflow.keras import callbacks
 from tensorflow.keras import layers as tfkl
 from tensorflow.keras import regularizers
 from tensorflow.keras.initializers import Constant
-
-from sampling_layers import get_layer_builder
 
 
 class Encoder(tfkl.Layer):
@@ -112,7 +111,7 @@ class ShaRP(tfk.Model):
         n_classes: int,
         variational_layer: Union[str, Callable[..., tfkl.Layer]],
         variational_layer_kwargs: dict = dict(),
-        act=lambda x: tfk.activations.relu(x, alpha=0.0),  # "relu",
+        act="relu",
         opt="adam",
         bottleneck_activation="tanh",
         bottleneck_l1=0.0,
