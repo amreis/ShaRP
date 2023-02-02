@@ -100,7 +100,7 @@ if __name__ == "__main__":
         for layer, prior_scale in itertools.product(
             ["centered_diagonal_normal", "diagonal_normal", "laplace", "gumbel"], [1.0, 0.05, 0.01]
         ):
-            sharp = sharp.ShaRP(
+            sharp_model = sharp.ShaRP(
                 X.shape[1],
                 len(np.unique(y_train)),
                 layer,
@@ -111,8 +111,8 @@ if __name__ == "__main__":
                 },
                 bottleneck_activation="linear",
             )
-            sharp.fit(X_train, y_train, epochs=epochs, verbose=verbose, batch_size=64)
-            X_proj = sharp.transform(X_train)
+            sharp_model.fit(X_train, y_train, epochs=epochs, verbose=verbose, batch_size=64)
+            X_proj = sharp_model.transform(X_train)
             D_low = metrics.compute_distance_list(X_proj)
             results.append(
                 (dataset_name, layer, prior_scale)

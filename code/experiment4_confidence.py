@@ -163,7 +163,7 @@ if __name__ == "__main__":
         label_bin.fit(y_train)
 
         epochs = epochs_dataset[dataset_name]
-        sharp = sharp.ShaRP(
+        sharp_model = sharp.ShaRP(
             X.shape[1],
             len(np.unique(y_train)),
             "diagonal_normal",
@@ -176,8 +176,8 @@ if __name__ == "__main__":
             },
             bottleneck_activation="linear",
         )
-        sharp.fit(X_train, y_train, epochs=epochs, verbose=verbose, batch_size=64)
-        X_sharp = sharp.transform(X_train)
+        sharp_model.fit(X_train, y_train, epochs=epochs, verbose=verbose, batch_size=64)
+        X_sharp = sharp_model.transform(X_train)
 
         make_plots(
             output_dir,

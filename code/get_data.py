@@ -105,15 +105,15 @@ def process_mnist():
 def process_har():
     har = zipfile.ZipFile("../data/har/UCI HAR Dataset.zip")
     with tempfile.TemporaryDirectory() as tmp_dir:
-        har.extractall(tmp_dir.name)
+        har.extractall(tmp_dir)
 
         df = pd.read_csv(
-            os.path.join(tmp_dir.name, "UCI HAR Dataset", "train", "X_train.txt"),
+            os.path.join(tmp_dir, "UCI HAR Dataset", "train", "X_train.txt"),
             header=None,
             delim_whitespace=True,
         )
         labels = pd.read_csv(
-            os.path.join(tmp_dir.name, "UCI HAR Dataset", "train", "y_train.txt"),
+            os.path.join(tmp_dir, "UCI HAR Dataset", "train", "y_train.txt"),
             header=None,
             delim_whitespace=True,
         )

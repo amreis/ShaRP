@@ -131,14 +131,16 @@ if __name__ == "__main__":
             dict(kl_weight=2.0, kl_mu_weight=0.01),
             dict(kl_weight=1.0, kl_mu_weight=0.01),
             dict(kl_weight=0.5, kl_mu_weight=0.01),
+            dict(kl_weight=0.25, kl_mu_weight=0.01),
             dict(kl_weight=0.1, kl_mu_weight=0.01),
+            dict(kl_weight=0.05, kl_mu_weight=0.01),
             dict(kl_weight=0.0, kl_mu_weight=0.01),
             dict(kl_weight=0.5, kl_mu_weight=0.5),
             dict(kl_weight=0.5, kl_mu_weight=1.0),
             dict(kl_weight=0.1, kl_mu_weight=0.5),
             dict(kl_weight=0.1, kl_mu_weight=1.0),
         ):
-            sharp = sharp.ShaRP(
+            sharp_model = sharp.ShaRP(
                 X.shape[1],
                 len(np.unique(y_train)),
                 "diagonal_normal",
@@ -150,14 +152,14 @@ if __name__ == "__main__":
                 | model_config,
                 bottleneck_activation="linear",
             )
-            sharp.fit(
+            sharp_model.fit(
                 X_train,
                 y_train,
                 epochs=epochs,
                 verbose=verbose,
                 batch_size=64,
             )
-            X_sharp = sharp.transform(X_train)
+            X_sharp = sharp_model.transform(X_train)
             D_sharp = metrics.compute_distance_list(X_sharp)
             results.append(
                 (
