@@ -4,6 +4,7 @@ This repository contains the code and example scripts for ShaRP, the shape-regul
 
 The main files for implementation are `sharp.py` and `sampling_layers.py`. Running `python sharp.py` executes a basic demo of the technique.
 
+This work will appear at [EuroVA 2023](https://www.eurova.org/eurova-2023), a workshop co-located with [EuroVIS 2023](https://www.eurovis.org/). The associated publication will be linked as soon as possible.
 
 ## Python Setup
 
