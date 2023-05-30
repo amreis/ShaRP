@@ -140,14 +140,14 @@ def main():
             dict(power=30.0),
             dict(power=100.0),
         ):
-            sharp = sharp.ShaRP(
+            sharp_model = sharp.ShaRP(
                 X.shape[1],
                 len(np.unique(y_train)),
                 "generalized_normal",
                 model_config,
                 bottleneck_activation="linear",
             )
-            sharp.fit(
+            sharp_model.fit(
                 X_train,
                 y_train,
                 epochs=epochs,
@@ -155,7 +155,7 @@ def main():
                 batch_size=64,
                 callbacks=[callbacks.TerminateOnNaN()],
             )
-            X_sharp = sharp.transform(X_train)
+            X_sharp = sharp_model.transform(X_train)
             D_sharp = metrics.compute_distance_list(X_sharp)
             results.append(
                 (dataset_name, f'{model_config["power"]:.3g}')

@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
         epochs = epochs_dataset[dataset_name]
 
-        sharp = sharp.ShaRP(
+        sharp_model = sharp.ShaRP(
             X.shape[1],
             len(np.unique(y)),
             "laplace",
@@ -92,17 +92,17 @@ if __name__ == "__main__":
             bottleneck_l1=0.0,
             bottleneck_l2=0.5,
         )
-        sharp.fit(
+        sharp_model.fit(
             X_train,
             y_train,
             epochs=epochs,
             verbose=verbose,
             batch_size=64,
         )
-        X_sharp = sharp.transform(X_train)
-        X_inv_sharp = sharp.inverse_transform(X_sharp)
-        X_sharp_test = sharp.transform(X_test)
-        X_inv_sharp_test = sharp.inverse_transform(X_sharp_test)
+        X_sharp = sharp_model.transform(X_train)
+        X_inv_sharp = sharp_model.inverse_transform(X_sharp)
+        X_sharp_test = sharp_model.transform(X_test)
+        X_inv_sharp_test = sharp_model.inverse_transform(X_sharp_test)
 
         aep = ae.AutoencoderProjection(epochs=epochs, verbose=0)
         aep.fit(X_train)
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     )
 
     epochs = epochs_dataset[dataset_name]
-    sharp = sharp.ShaRP(
+    sharp_model = sharp.ShaRP(
         X.shape[1],
         len(np.unique(y)),
         "triangle",
@@ -196,15 +196,15 @@ if __name__ == "__main__":
         bottleneck_l1=0.0,
         bottleneck_l2=0.5,
     )
-    sharp.fit(
+    sharp_model.fit(
         X_train,
         y_train,
         epochs=epochs,
         verbose=verbose,
         batch_size=64,
     )
-    X_sharp = sharp.transform(X_train)
-    X_inv_sharp = sharp.inverse_transform(X_sharp)
+    X_sharp = sharp_model.transform(X_train)
+    X_inv_sharp = sharp_model.inverse_transform(X_sharp)
 
     aep = ae.AutoencoderProjection(epochs=epochs, verbose=0)
     aep.fit(X_train)
