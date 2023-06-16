@@ -4,7 +4,28 @@ This repository contains the code and example scripts for ShaRP, the shape-regul
 
 The main files for implementation are `sharp.py` and `sampling_layers.py`. Running `python sharp.py` executes a basic demo of the technique.
 
-This work will appear at [EuroVA 2023](https://www.eurova.org/eurova-2023), a workshop co-located with [EuroVIS 2023](https://www.eurovis.org/). The associated publication will be linked as soon as possible.
+## Citing this work
+
+This work appeared at [EuroVA 2023](https://www.eurova.org/eurova-2023), a workshop co-located with [EuroVIS 2023](https://www.eurovis.org/) and has been published in the EuroGraphics Digital Library.
+
+Machado, A., Telea, A., & Behrisch, M. (2023). [ShaRP: Shape-Regularized Multidimensional Projections](https://diglib.eg.org/handle/10.2312/eurova20231088). In EuroVis Workshop on Visual Analytics (EuroVA). The Eurographics Association.
+
+You can use the following BibTeX entry to cite it:
+
+
+```bibtex
+@inproceedings {10.2312:eurova.20231088,
+booktitle = {EuroVis Workshop on Visual Analytics (EuroVA)},
+editor = {Angelini, Marco and El-Assady, Mennatallah},
+title = {{ShaRP: Shape-Regularized Multidimensional Projections}},
+author = {Machado, Alister and Telea, Alexandru and Behrisch, Michael},
+year = {2023},
+publisher = {The Eurographics Association},
+ISSN = {2664-4487},
+ISBN = {978-3-03868-222-6},
+DOI = {10.2312/eurova.20231088}
+}
+```
 
 ## Python Setup
 
