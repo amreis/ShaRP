@@ -8,7 +8,6 @@ numpy = "*"
 scipy = "*"
 umap-learn = "*"
 matplotlib = "*"
-sklearn = "*"
 pandas = "*"
 scikit-image = "*"
 wget = "*"
@@ -17,12 +16,15 @@ tensorboard = "*"
 tensorflow-probability = "==0.17.0"
 tensorflow-gpu = "==2.9"
 protobuf = "*"
+scikit-learn = "*"
+plotly = "*"
 
 [dev-packages]
 black = "*"
 flake8 = "*"
 notebook = "*"
 mypy = "*"
+google-cloud-storage = "*"
 
 [requires]
 python_version = "3.9"
