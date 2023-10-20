@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from contextlib import suppress
+from functools import wraps
 from typing import Optional
-from matplotlib.collections import LineCollection
+
 import numpy as np
+from matplotlib.collections import LineCollection
+from scipy import spatial, stats
 from sklearn.ensemble import IsolationForest
 from sklearn.neighbors import KNeighborsClassifier
-from scipy import spatial
-from scipy import stats
 
 
 def nan_when_raises(func):
+    @wraps(func)
     def new_func(*args, **kwargs):
-        try:
+        with suppress(ValueError):
             return func(*args, **kwargs)
-        except ValueError:
-            return np.nan
+        return np.nan
 
     return new_func
 
@@ -25,9 +27,14 @@ def compute_distance_list(X):
     return spatial.distance.pdist(X, "euclidean")
 
 
+# TODO handle precomputed distances. Euclidean doesn't make sense for spherical.
 @nan_when_raises
-def metric_neighborhood_hit(X, y, k=7):
+def metric_neighborhood_hit(X, y, k=7, precomputed=False):
     knn = KNeighborsClassifier(n_neighbors=k)
+    if precomputed:
+        # tell `knn` to assume X is a distance matrix
+        knn.set_params(metric='precomputed')
+
     knn.fit(X, y)
 
     neighbors = knn.kneighbors(X, return_distance=False)
