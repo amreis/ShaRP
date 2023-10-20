@@ -2,16 +2,20 @@ import os
 from typing import Callable, Optional, Union
 
 import matplotlib.pyplot as plt
+import metrics
 import numpy as np
 import pylab
+import radial
 import tensorflow as tf
 from sampling_layers import get_layer_builder
 from sklearn.preprocessing import LabelBinarizer
-from tensorflow import keras as tfk
-from tensorflow.keras import callbacks
-from tensorflow.keras import layers as tfkl
-from tensorflow.keras import regularizers
-from tensorflow.keras.initializers import Constant
+
+# from tensorflow import keras as tfk
+import keras as tfk
+from keras import callbacks
+from keras import layers as tfkl
+from keras import regularizers
+from keras.initializers import Constant
 
 
 class Encoder(tfkl.Layer):
@@ -111,6 +115,7 @@ class ShaRP(tfk.Model):
         n_classes: int,
         variational_layer: Union[str, Callable[..., tfkl.Layer]],
         variational_layer_kwargs: dict = dict(),
+        latent_dim=2,
         act="relu",
         opt="adam",
         bottleneck_activation="tanh",
@@ -125,7 +130,7 @@ class ShaRP(tfk.Model):
         super().__init__(name=name, **kwargs)
         self.original_dim = original_dim
         self.n_classes = n_classes
-        self.latent_dim = 2
+        self.latent_dim = latent_dim
         self.variational_layer = variational_layer
         self.act = act
         self.opt = opt
@@ -174,7 +179,7 @@ class ShaRP(tfk.Model):
         mu, log_var, encoded = self.variational(self.encoder(self.main_input))
         self.fwd = tfk.Model(inputs=self.main_input, outputs=encoded)
 
-        self.encoded_input = tfk.Input(2)
+        self.encoded_input = tfk.Input(self.latent_dim)
         rev = self.decoder(self.encoded_input)
         classes = self.classifier(rev)
         rev = self.reconstructor(rev)
@@ -367,19 +372,113 @@ class ProjectDataCallback(callbacks.Callback):
         )
 
 
-if __name__ == "__main__":
+def compute_all_metrics(X, X_2d, D_high, D_low, y, X_inv=None, X_test=None, X_inv_test=None):
+    from scipy.spatial.distance import squareform
+
+    T = metrics.metric_trustworthiness(X, X_2d, D_high, D_low)
+    C = metrics.metric_continuity(X, X_2d, D_high, D_low)
+    R = metrics.metric_shepard_diagram_correlation(D_high, D_low)
+    S = metrics.metric_normalized_stress(D_high, D_low)
+    N = metrics.metric_neighborhood_hit(squareform(D_low), y, k=3, precomputed=True)
+    DSC = metrics.distance_consistency(X_2d, y)
+    CC = metrics.cluster_size_consistency_r(X, y, X_2d)
+
+    if X_inv is not None:
+        MSE_train = metrics.metric_mse(X, X_inv)
+    else:
+        MSE_train = -99.0
+
+    if X_inv_test is not None:
+        assert X_test is not None, "if X_inv_test is provided, X_test must be too"
+        MSE_test = metrics.metric_mse(X_test, X_inv_test)
+    else:
+        MSE_test = -99.0
+
+    return T, C, R, S, N, DSC, CC, MSE_train, MSE_test
+
+
+def gen_plotly_plots(X, X_proj, y, y_key):
+    import plotly.express as px
+    from itertools import starmap
+
+    import matplotlib
+
+    cmap = matplotlib.colormaps.get_cmap("tab10")
+
+    def to_css(r: int, g: int, b: int, _a: int) -> str:
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    css_colors = list(starmap(to_css, [cmap(i, bytes=True) for i in range(10)]))
+
+    fig = px.scatter_3d(
+        x=X_proj[:, 0],
+        y=X_proj[:, 1],
+        z=X_proj[:, 2],
+        color=y,
+        color_discrete_sequence=css_colors,
+        hover_data={
+            "x": X_proj[:, 0],
+            "y": X_proj[:, 1],
+            "z": X_proj[:, 2],
+            "color": y,
+            "class": [y_key[lbl] for lbl in y],
+        },
+    )
+    fig.write_html("plotly_sharp.html")
+
+    from MulticoreTSNE import MulticoreTSNE as TSNE
+
+    X_tsne_2d = TSNE(n_jobs=8).fit_transform(X)
+    fig = px.scatter(
+        x=X_tsne_2d[:, 0],
+        y=X_tsne_2d[:, 1],
+        color=y,
+        color_discrete_sequence=css_colors,
+        hover_data={
+            "x": X_tsne_2d[:, 0],
+            "y": X_tsne_2d[:, 1],
+            "color": y,
+            "class": [y_key[lbl] for lbl in y],
+        },
+    )
+    fig.write_html("plotly_tsne_2d.html")
+    X_tsne_3d = TSNE(n_components=3, n_jobs=8).fit_transform(X)
+    fig = px.scatter_3d(
+        x=X_tsne_3d[:, 0],
+        y=X_tsne_3d[:, 1],
+        z=X_tsne_3d[:, 2],
+        color=y,
+        color_discrete_sequence=css_colors,
+        hover_data={
+            "x": X_tsne_3d[:, 0],
+            "y": X_tsne_3d[:, 1],
+            "z": X_tsne_3d[:, 2],
+            "color": y,
+            "class": [y_key[lbl] for lbl in y],
+        },
+    )
+    fig.write_html("plotly_tsne_3d.html")
+
+
+def main():
     if "code" not in os.getcwd():
         os.chdir("./code")
 
-    X = np.load("../data/mnist/X.npy")
-    y = np.load("../data/mnist/y.npy")
+    X = np.load("../data/quickdraw2/X.npy")
+    y = np.load("../data/quickdraw2/y.npy")
+    import json
+
+    with open("../data/quickdraw2/y_key.json") as f:
+        y_key: dict = json.load(f)
+        y_key = {int(k): v for k, v in y_key.items()}
 
     original_dim = X.shape[1]
     sharp = ShaRP(
         original_dim,
         len(np.unique(y)),
-        "diagonal_normal",
-        variational_layer_kwargs=dict(kl_weight=0.1),
+        "spherical",
+        variational_layer_kwargs=dict(),  # dict(kl_weight=0.1),
+        latent_dim=3,
         var_leaky_relu_alpha=-0.0001,
         bottleneck_activation="linear",
         bottleneck_l1=0.0,
@@ -398,7 +497,7 @@ if __name__ == "__main__":
     val_dataset = train_dataset.take(500).batch(32)
     train_dataset = train_dataset.skip(500).take(30000).batch(64)
 
-    epochs = 20
+    epochs = 40
 
     sharp.fit(
         train_dataset,
@@ -418,6 +517,33 @@ if __name__ == "__main__":
     )
 
     X_i = sharp.transform(X_train)
+
+    plt.axes(projection="3d")
+    plt.title("Projected Data")
+    cmap = pylab.cm.get_cmap("tab10")
+    for lab in range(10):
+        plt.gca().scatter(
+            X_i[y_train == lab, 0],
+            X_i[y_train == lab, 1],
+            X_i[y_train == lab, 2],
+            c=[cmap(lab)],
+            marker=f"${lab}$",
+            # marker=".",
+            # alpha=0.3,
+            s=200,
+        )
+    plt.gca().set_aspect("equal")
+    plt.axis("off")
+
+    D_high = metrics.compute_distance_list(X_train)
+    D_low = radial.fast_pairwise_arc_length_distance(X_i)
+
+    print(compute_all_metrics(X_train, X_i, D_high, D_low, y_train, sharp.inverse_transform(X_i)))
+    plt.show()
+
+    gen_plotly_plots(X_train, X_i, y_train, y_key)
+
+    return
     x_coords, y_coords = (
         np.linspace(X_i[:, 0].min(), X_i[:, 0].max(), 250),
         np.linspace(X_i[:, 1].min(), X_i[:, 1].max(), 250),
@@ -465,3 +591,7 @@ if __name__ == "__main__":
 
     del xx, yy, x_coords, y_coords, sample_points
     plt.show()
+
+
+if __name__ == "__main__":
+    main()
