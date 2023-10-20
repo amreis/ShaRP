@@ -1,15 +1,18 @@
-from typing import Any, Mapping, TypeVar
+from typing import Any, Mapping
 
+import keras as tfk
 import numpy as np
 import tensorflow as tf
-import tensorflow_probability as tfp
-from tensorflow import keras as tfk
-from tensorflow.keras import layers as tfkl
-from tensorflow.keras import regularizers
-from tensorflow.keras.initializers import Constant
+# import tensorflow_probability as tfp
+from keras import initializers
+from keras import layers as tfkl
+from keras import regularizers
+from keras.initializers import Constant
+import tensorflow_probability.python.distributions as tfd
+import tensorflow_probability.python.layers as tfpl
 
-tfd = tfp.distributions
-tfpl = tfp.layers
+# tfd = tfp.distributions
+# tfpl = tfp.layers
 
 
 def get_layer_builder(layer_name: str):
@@ -54,6 +57,8 @@ class SamplingLayer(tfkl.Layer):
             return GumbelSampling
         elif layer_name == "polygon":
             return PolygonSampling
+        elif layer_name == "spherical":
+            return SphericalSampling
         else:
             raise ValueError(f"layer name {layer_name} does not correspond to an implementation")
 
@@ -96,6 +101,87 @@ class SamplingLayer(tfkl.Layer):
             }
         )
         return config
+
+
+class SphericalSampling(SamplingLayer):
+    def __init__(
+        self,
+        latent_dim: int,
+        act="tanh",
+        init="glorot_uniform",
+        bias=0.0001,
+        l1_reg=0,
+        l2_reg=0.5,
+        name="spherical_sampling",
+        **kwargs,
+    ):
+        super().__init__(
+            latent_dim=latent_dim,
+            act=act,
+            init=init,
+            bias=bias,
+            l1_reg=l1_reg,
+            l2_reg=l2_reg,
+            name=name,
+            **kwargs,
+        )
+
+        assert latent_dim == 3, "SphericalSampling currently only supports 3-D latent_dim."
+
+        self.dense_mean = tfk.Sequential(
+            [
+                tfkl.Dense(
+                    2,
+                    activation="linear",
+                    kernel_initializer="he_uniform",
+                    activity_regularizer=regularizers.l1_l2(l1=0.0, l2=0.0001),
+                    bias_initializer=initializers.GlorotUniform(),
+                ),
+                # tfkl.Lambda(lambda x: x / tf.linalg.norm(x, axis=-1, keepdims=True)),
+            ]
+        )  # Lambda makes it unitary.
+
+        self.dense_concentration = tfkl.Dense(1, activation="elu")
+
+        self.sampling = tfpl.DistributionLambda(
+            make_distribution_fn=lambda t: tfd.VonMises(t[..., :2], t[..., 2:]),
+            # activity_regularizer=tfpl.KLDivergenceRegularizer(
+            #     tfd.VonMises([np.pi, np.pi], [0.0, 0.0]), weight=1e-2
+            # ),
+        )
+
+    def _sample(self, inputs, training=None):
+        mean = self.dense_mean(inputs)
+        conc = self.dense_concentration(inputs)
+        if training:
+            self.add_loss(
+                0.1
+                * tf.reduce_mean(
+                    # 0.0 * tf.reduce_sum(mean**2, axis=-1)
+                    # (1.0 - tf.math.sin((mean[:, 0] + np.pi) / 2))
+                    + 0.005 * tfk.losses.logcosh(conc, 0.0)  # tf.reduce_sum(conc**2, axis=-1)
+                )
+            )
+        return self.sampling(tf.concat([mean, conc], axis=-1))
+
+    def _map_to_sphere(self, samples):
+        # tfd.VonMises gives us numbers in [-pi, pi]. These mappings shift them to [0, 2pi]
+        # and [0, pi].
+        return tf.stack(
+            [
+                tf.math.sin((samples[:, 0] + np.pi) / 2) * tf.math.cos(samples[:, 1] + np.pi),
+                tf.math.sin((samples[:, 0] + np.pi) / 2) * tf.math.sin(samples[:, 1] + np.pi),
+                tf.math.cos((samples[:, 0] + np.pi) / 2),
+            ],
+            axis=-1,
+        )
+
+    def call(self, inputs, training=None):
+        samples = self._sample(inputs, training=training)
+        # samples += tf.random.normal(tf.shape(mean), mean=0, stddev=0.0001)
+        samples = self._map_to_sphere(samples)
+
+        return tf.zeros_like(samples), tf.zeros_like(samples), samples
 
 
 class DiagonalNormalSampling(SamplingLayer):
